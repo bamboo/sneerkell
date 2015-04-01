@@ -9,9 +9,9 @@ import qualified Data.Vector as V
 
 data Transit where
   Extension :: (Transitable a) => String -> a -> Transit
+  Map       :: (Transitable k, Transitable v) => [(k, v)] -> Transit
   Keyword   :: String -> Transit
   Str       :: String -> Transit
-  Map       :: (Transitable k, Transitable v) => [(k, v)] -> Transit
 
 class Transitable a where
   transit :: a -> Transit
@@ -21,9 +21,9 @@ instance Transitable Transit where
 
 instance J.ToJSON Transit where
   toJSON (Extension tag v) = jarray [jstring $ "~#" ++ tag, tson v]
-  toJSON (Map kvs)         = jarray $ mapMarker : L.concatMap (\(k, v) -> [tson k, tson v]) kvs  
-  toJSON (Str s)           = jstring s
+  toJSON (Map kvs)         = jarray $ mapMarker : L.concatMap (\(k, v) -> [tson k, tson v]) kvs
   toJSON (Keyword k)       = jstring $ "~:" ++ k
+  toJSON (Str s)           = jstring s
 
 jarray :: [J.Value] -> J.Value
 jarray = J.Array . V.fromList
