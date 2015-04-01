@@ -21,7 +21,7 @@ executable sneerkell
                     aeson,
                     text,
                     vector
-  ghc-options:      -Wall
+  ghc-options:      -Wall -fno-warn-orphans
   hs-source-dirs:   src
   main-is:          Main.hs
 
