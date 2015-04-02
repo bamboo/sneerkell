@@ -7,4 +7,4 @@ spec :: Spec
 spec = do
   describe "tson" $
     it "can encode strings" $
-      tson "foo" `shouldBe` jstring "bar"
+      tson "foo" `shouldBe` jstring "foo"
