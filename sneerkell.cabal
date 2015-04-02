@@ -13,7 +13,7 @@ cabal-version:      >=1.10
 
 library
   default-language: Haskell2010
-  ghc-options:      -Wall -fno-warn-orphans
+  ghc-options:      -Wall -Werror -fno-warn-orphans
   hs-source-dirs:   src
   exposed-modules:  Sneer.Transit
   build-depends:    base >= 4
@@ -33,7 +33,7 @@ executable sneerkell
                   , aeson
                   , text
                   , vector
-  ghc-options:      -Wall -fno-warn-orphans
+  ghc-options:      -Wall -Werror -fno-warn-orphans
   hs-source-dirs:   src
   main-is:          Main.hs
 
