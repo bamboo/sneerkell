@@ -1,4 +1,5 @@
-# sneerkell
+# SneerKell - ![Build Status](https://travis-ci.org/bamboo/sneerkell.svg)
+
 The Sneer in Haskell Experiment
 
 ## Building
