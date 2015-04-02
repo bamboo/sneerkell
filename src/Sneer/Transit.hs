@@ -4,7 +4,7 @@ module Sneer.Transit where
 
 import qualified Data.Aeson.Types as J
 import qualified Data.List as L
-import           Data.Text as T
+import qualified Data.Text as T
 import qualified Data.Vector as V
 
 data Transit where
@@ -32,7 +32,7 @@ jstring :: String -> J.Value
 jstring = J.String . T.pack
 
 mapMarker :: J.Value
-mapMarker = J.String "^ "
+mapMarker = jstring "^ "
 
 tson :: (Transitable a) => a -> J.Value
 tson = J.toJSON . transit
