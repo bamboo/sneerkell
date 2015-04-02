@@ -1,4 +1,4 @@
-# SneerKell - ![Build Status](https://travis-ci.org/bamboo/sneerkell.svg)
+# SneerKell [![Build Status](https://travis-ci.org/bamboo/sneerkell.png?branch=master)](https://travis-ci.org/bamboo/sneerkell)
 
 The Sneer in Haskell Experiment
 
