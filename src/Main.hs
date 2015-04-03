@@ -1,14 +1,14 @@
 module Main where
 
-import Network.Haskoin.Crypto
-import Network.Socket hiding (sendTo)
+import           Network.Haskoin.Crypto
+import           Network.Socket hiding (sendTo)
 import qualified Network.Socket.ByteString as NSB
-import Control.Applicative
-import Text.Printf(printf)
+import           Control.Applicative
+import           Text.Printf (printf)
 import qualified Data.ByteString.Char8 as BSC8
-import Data.ByteString.Lazy as BSL
-import Data.Aeson.Encode(encode)
-import Sneer.Transit
+import           Data.ByteString.Lazy as BSL
+import           Data.Aeson.Encode (encode)
+import           Sneer.Transit
 
 main :: IO ()
 main = withSocketsDo $ do

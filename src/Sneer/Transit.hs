@@ -4,7 +4,7 @@ module Sneer.Transit where
 
 import qualified Data.Aeson.Types as J
 import qualified Data.List as L
-import Data.Text as T
+import           Data.Text as T
 import qualified Data.Vector as V
 
 data Transit where
