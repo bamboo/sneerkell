@@ -1,7 +1,8 @@
 module Sneer.Client where
 
 import           Control.Applicative
-import           Data.Aeson.Encode (encode)
+import           Data.Aeson (encode, decode)
+import qualified Data.Aeson.Types as J
 import qualified Data.ByteString.Char8 as BSC8
 import           Data.ByteString.Lazy as BSL
 import           Network.Socket hiding (sendTo)
@@ -16,6 +17,12 @@ sendTo (Client sock address) msg = do
   let bytes = toStrict . encode . transit $ msg
   BSC8.putStrLn bytes
   NSB.sendTo sock bytes address
+
+receiveFrom :: Client -> IO (Maybe J.Value)
+receiveFrom (Client sock _) = do
+  (bytes, _) <- NSB.recvFrom sock 1024
+  let bytes' = BSL.fromStrict bytes
+  return $ decode bytes'
 
 data Client = Client Socket SockAddr
 

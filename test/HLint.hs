@@ -6,6 +6,7 @@ import System.Exit (exitFailure, exitSuccess)
 sourceFolders :: [String]
 sourceFolders =
     [ "src"
+    , "main"
     , "test"
     ]
 
