@@ -9,7 +9,7 @@ before_install:
 install:
 - cabal sandbox init
 - cabal install --only-dependencies --enable-tests
-- sneer/gradlew --build-file sneer/build.gradle :server:assemble
+- sneer/gradlew --build-file sneer/build.gradle -q :server:assemble
 before_script:
 - sneer/gradlew --build-file sneer/build.gradle -q :server:run -Pserver-options="[5555, 8282]" &
 - cabal configure --enable-tests
