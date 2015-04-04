@@ -16,11 +16,14 @@ spec =
                            ,(k "from", k "me")
                            ,(k "to",   k "you")
                            ]
-      Just _ <- timeout (milliseconds 500) $ wait pendingAck
+      Just _ <- timeoutIn 5 seconds $ wait pendingAck
       return ()
  where
   tuple = Map [("id", Number 42)]
   k = Keyword
 
-milliseconds :: Int -> Int
-milliseconds = (* 1000)
+timeoutIn :: Int -> (Int -> Int) -> IO a -> IO (Maybe a)
+timeoutIn t unit = timeout (unit t)
+
+seconds :: Int -> Int
+seconds = (* 1000000)
