@@ -3,6 +3,7 @@
 module Sneer.Transit where
 
 import qualified Data.Aeson.Types as J
+import           Data.Scientific
 import qualified Data.List as L
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -12,6 +13,7 @@ data Transit where
   Map       :: (Transitable k, Transitable v) => [(k, v)] -> Transit
   Keyword   :: String -> Transit
   Str       :: String -> Transit
+  Number    :: Scientific -> Transit
 
 class Transitable a where
   transit :: a -> Transit
@@ -24,6 +26,7 @@ instance J.ToJSON Transit where
   toJSON (Map kvs)         = jarray $ mapMarker : L.concatMap (\(k, v) -> [tson k, tson v]) kvs
   toJSON (Keyword k)       = jstring $ "~:" ++ k
   toJSON (Str s)           = jstring s
+  toJSON (Number n)        = J.Number n
 
 jarray :: [J.Value] -> J.Value
 jarray = J.Array . V.fromList

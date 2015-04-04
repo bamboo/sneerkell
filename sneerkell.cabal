@@ -19,8 +19,9 @@ library
   build-depends:    base >= 4
                   , haskoin
                   , bytestring
-                  , aeson
                   , text
+                  , aeson
+                  , scientific
                   , vector
 
 executable sneerkell
