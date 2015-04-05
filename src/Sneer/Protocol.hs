@@ -4,7 +4,7 @@
 module Sneer.Protocol where
 
 import qualified Data.Transit as T
-import           Network.Haskoin.Crypto
+import           Network.Haskoin.Crypto (Address, addrToBase58)
 
 data ClientRequest = PingFrom OwnPuk
                    | SendFrom OwnPuk PeerPuk Tuple
