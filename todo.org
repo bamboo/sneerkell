@@ -1,0 +1,5 @@
+* save/restore private key
+* reliable messaging (Network.UdpMessenger)
+* use proper puk encoding (transit bytes)
+* store tuples (log all received tuples)
+* add contact from the command line (sneer add-contact <PUK>)
