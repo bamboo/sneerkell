@@ -1,20 +1,14 @@
 module Main where
 
-import Network.Haskoin.Crypto
 import Sneer.Client
+import Sneer.Keys
 import Sneer.Protocol
 import Text.Printf (printf)
 import Network (withSocketsDo)
 
 main :: IO ()
 main = withSocketsDo $ do
-  prik <- randomPrivateKey
-  let puk = derivePubKey prik
-      pukAddr = pubKeyAddr puk
+  (_, puk) <- ownKeyAndAddress
   client <- newClient
-  bytesSent <- sendTo client $ PingFrom pukAddr
+  bytesSent <- sendTo client $ PingFrom puk
   printf "%d bytes sent.\n" bytesSent
-
-randomPrivateKey :: IO PrvKey
-randomPrivateKey = withSource devRandom genPrvKey
-
