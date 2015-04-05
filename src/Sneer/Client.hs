@@ -5,9 +5,9 @@ import           Data.Aeson (encode, decode)
 import qualified Data.Aeson.Types as J
 import qualified Data.ByteString.Char8 as BSC8
 import           Data.ByteString.Lazy as BSL
+import           Data.Transit (Transitable, transit)
 import           Network.Socket hiding (sendTo)
 import qualified Network.Socket.ByteString as NSB
-import           Sneer.Transit (Transitable, transit)
 
 newClient :: IO Client
 newClient = Client <$> udpSocket <*> serverAddr

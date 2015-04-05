@@ -1,6 +1,6 @@
-module Sneer.TransitSpec where
+module Data.TransitSpec where
 
-import Sneer.Transit
+import Data.Transit
 import Test.Hspec
 
 spec :: Spec

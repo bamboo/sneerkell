@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs, TypeSynonymInstances, FlexibleInstances, OverloadedStrings #-}
 
-module Sneer.Transit where
+module Data.Transit where
 
 import qualified Data.Aeson.Types as J
 import           Data.Scientific
