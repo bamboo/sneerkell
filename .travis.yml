@@ -12,6 +12,7 @@ install:
 - sneer/gradlew --build-file sneer/build.gradle -q :server:assemble
 before_script:
 - sneer/gradlew --build-file sneer/build.gradle -q :server:run -Pserver-options="[5555, 8282]" &
+- sleep 5
 - cabal check
 - cabal configure --enable-tests
 - cabal build
