@@ -1,10 +1,10 @@
 module Main where
 
+import Network (withSocketsDo)
 import Sneer.Client
 import Sneer.Keys
 import Sneer.Protocol
 import Text.Printf (printf)
-import Network (withSocketsDo)
 
 main :: IO ()
 main = withSocketsDo $ do
