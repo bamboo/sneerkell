@@ -37,9 +37,7 @@ randomPrivateKey :: IO PrvKey
 randomPrivateKey = withSource devRandom genPrvKey
 
 privateKeyFile :: IO FilePath
-privateKeyFile = do
-  dataDir <- dataDirectory
-  return $ dataDir </> "key.wif"
+privateKeyFile = (</> "key.wif") <$> dataDirectory
 
 dataDirectory :: IO FilePath
 dataDirectory = getAppDataDirectory "sneerkell"
