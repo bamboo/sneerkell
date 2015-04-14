@@ -1,4 +1,5 @@
 * reliable messaging (Network.UdpMessenger)
 * use proper puk encoding (transit bytes)
 * store tuples (log all received tuples)
+* implement tuple space queries as materialized views
 * add contact from the command line (sneer add-contact <PUK>)
