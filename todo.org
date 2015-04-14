@@ -3,3 +3,4 @@
 * store tuples (log all received tuples)
 * implement tuple space queries as materialized views
 * add contact from the command line (sneer add-contact <PUK>)
+* implement tuple space queries as materialized views
