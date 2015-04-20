@@ -1,36 +1,96 @@
-module Sneer.Client where
+{-# LANGUAGE RecordWildCards #-}
 
-import           Control.Applicative
-import           Data.Aeson (encode, decode)
-import qualified Data.Aeson.Types as J
-import qualified Data.ByteString.Char8 as BSC8
-import           Data.ByteString.Lazy as BSL
-import           Data.Transit (Transitable, transit)
-import           Network.Socket hiding (sendTo)
-import qualified Network.Socket.ByteString as NSB
+module Sneer.Client ( startClient
+                    , sendTuple
+                    , receiveTuple
+                    , stopClient
+                    , withClient
+                    , Client ()
+                    ) where
 
-newClient :: IO Client
-newClient = Client <$> udpSocket <*> serverAddr
+import Control.Applicative
+import Control.Concurrent (threadDelay)
+import Control.Concurrent.Async
+import Control.Concurrent.STM
+import Control.Exception (bracket)
+import Control.Monad (forever)
+import Data.Transit (tson)
+import Network.Socket
+import Network.UdpMessenger
+import Sneer.Keys
+import Sneer.Protocol
 
-sendTo :: (Transitable a) => Client -> a -> IO Int
-sendTo (Client sock address) msg = do
-  let bytes = toStrict . encode . transit $ msg
-  BSC8.putStrLn bytes
-  NSB.sendTo sock bytes address
+type TupleChan = TChan Tuple
 
-receiveFrom :: Client -> IO (Maybe J.Value)
-receiveFrom (Client sock _) = do
-  (bytes, _) <- NSB.recvFrom sock 1024
-  let bytes' = BSL.fromStrict bytes
-  return $ decode bytes'
+data Client = Client { _ownPuk     :: Address
+                     , _packetsOut :: JChan
+                     , _packetsIn  :: JChan
+                     , _tuplesOut  :: TupleChan
+                     , _tuplesIn   :: TupleChan
+                     , _messenger  :: Messenger
+                     , _pingTask   :: Async ()
+                     , _sendTask   :: Async ()
+                     }
 
-data Client = Client Socket SockAddr
+startClient :: Address -> IO Client
+startClient ownPuk = do
+  let _ownPuk =  ownPuk
+  _packetsOut <- newTChanIO
+  _packetsIn  <- newTChanIO
+  _tuplesOut  <- newTChanIO
+  _tuplesIn   <- newTChanIO
+  _messenger  <- startMessenger _packetsOut _packetsIn =<< serverAddr
+  _pingTask   <- async $ pingLoop _packetsOut _ownPuk
+  _sendTask   <- async $ sendLoop _packetsOut _tuplesOut _ownPuk
+  _recvTask   <- async $ recvLoop _packetsIn _tuplesIn
+  return Client{..}
+ where
+  serverAddr = SockAddrInet serverPort <$> inet_addr serverHost
+  serverHost = "127.0.0.1"
+  serverPort = 5555
 
-udpSocket :: IO Socket
-udpSocket = socket AF_INET Datagram defaultProtocol
+withClient :: Address -> (Client -> IO a) -> IO a
+withClient puk = bracket (startClient puk) stopClient
 
-serverAddr :: IO SockAddr
-serverAddr = SockAddrInet serverPort <$> inet_addr "127.0.0.1"
+sendLoop :: JChan -> TupleChan -> Address -> IO ()
+sendLoop packetsOut tuplesOut ownPuk =
+  forever $ do
+    (sentPacket, tuple) <- atomically $ do
+      tuple <- readTChan tuplesOut
+      case audience tuple of
+        Just peerPuk -> do
+          let packet = tson $ SendFrom ownPuk peerPuk tuple
+          writeTChan packetsOut packet
+          return (Just packet, tuple)
+        Nothing ->
+          return (Nothing, tuple)
+    case sentPacket of
+      Just packet -> putStrLn $ "OUT: " ++ show packet
+      Nothing     -> putStrLn $ "ERROR: audience missing from tuple " ++ show (tson tuple)
 
-serverPort :: PortNumber
-serverPort = 5555
+recvLoop :: JChan -> TupleChan -> IO ()
+recvLoop packetsIn _ =
+  forever $ do
+    packet <- atomically $ readTChan packetsIn
+    putStrLn $ "IN: " ++ show packet
+
+sendTuple :: Client -> Tuple -> STM ()
+sendTuple Client{..} = writeTChan _tuplesOut
+
+receiveTuple :: Client -> STM Tuple
+receiveTuple Client{..} = readTChan _tuplesIn
+
+stopClient :: Client -> IO ()
+stopClient Client{..} = do
+  cancel _pingTask
+  cancel _sendTask
+  stopMessenger _messenger
+
+pingLoop :: JChan -> Address -> IO ()
+pingLoop packetsOut ownPuk =
+  forever $ do
+    atomically $ writeTChan packetsOut ping
+    threadDelay $ 30 * seconds
+ where
+  ping = tson $ PingFrom ownPuk
+  seconds = 1000000

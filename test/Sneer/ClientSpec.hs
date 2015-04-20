@@ -1,24 +1,26 @@
 module Sneer.ClientSpec where
 
-import Control.Concurrent.Async
-import Data.Transit
+import Control.Concurrent.STM
+import Data.Transit (tson)
 import Sneer.Client
+import Sneer.Keys
+import Sneer.Protocol
 import Test.Hspec
 import Timeout
 
+neide, maico :: Address
+neide = PubKeyAddress 1
+maico = PubKeyAddress 2
+
 spec :: Spec
 spec =
-  describe "client" $
-    it "can exchange messages with server" $ do
-      subject <- newClient
-      pendingAck <- async $ receiveFrom subject
-      sendTo subject $ Map [(k "send", tuple)
-                           ,(k "from", k "me")
-                           ,(k "to",   k "you")
-                           ]
-      Just _ <- withTimeout $ wait pendingAck
-      return ()
+  describe "clients" $
+    it "can exchange tuples" $
+      withClient neide $ \n ->
+      withClient maico $ \m -> do
+        atomically $ sendTuple n tuple
+        Just tupleReceived <- withTimeout . atomically $ receiveTuple m
+        tson tupleReceived `shouldBe` tson tuple
  where
-  tuple = Map [("id", Number 42)]
-  k = Keyword
+  tuple = Tuple [("value", "42")] (Just maico) neide 1
 
