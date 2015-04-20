@@ -1,7 +1,6 @@
 module Sneer.ClientSpec where
 
 import Control.Concurrent.STM
-import Data.Transit (tson)
 import Sneer.Client
 import Sneer.Keys
 import Sneer.Protocol
@@ -20,7 +19,6 @@ spec =
       withClient maico $ \m -> do
         atomically $ sendTuple n tuple
         Just tupleReceived <- withTimeout . atomically $ receiveTuple m
-        tson tupleReceived `shouldBe` tson tuple
+        tupleReceived `shouldBe` tuple
  where
-  tuple = Tuple [("value", "42")] (Just maico) neide 1
-
+  tuple = Tuple [(tt "value", tt "42")] neide maico 1

@@ -55,18 +55,12 @@ withClient puk = bracket (startClient puk) stopClient
 sendLoop :: JChan -> TupleChan -> Address -> IO ()
 sendLoop packetsOut tuplesOut ownPuk =
   forever $ do
-    (sentPacket, tuple) <- atomically $ do
+    (sentPacket, _) <- atomically $ do
       tuple <- readTChan tuplesOut
-      case audience tuple of
-        Just peerPuk -> do
-          let packet = tson $ SendFrom ownPuk peerPuk tuple
-          writeTChan packetsOut packet
-          return (Just packet, tuple)
-        Nothing ->
-          return (Nothing, tuple)
-    case sentPacket of
-      Just packet -> putStrLn $ "OUT: " ++ show packet
-      Nothing     -> putStrLn $ "ERROR: audience missing from tuple " ++ show (tson tuple)
+      let packet = tson $ SendFrom ownPuk (_audience tuple) tuple
+      writeTChan packetsOut packet
+      return (packet, tuple)
+    putStrLn $ "OUT: " ++ show sentPacket
 
 recvLoop :: JChan -> TupleChan -> IO ()
 recvLoop packetsIn _ =
