@@ -2,9 +2,13 @@ module Data.TransitSpec where
 
 import Data.Transit
 import Test.Hspec
+import Test.QuickCheck
 
 spec :: Spec
 spec =
-  describe "tson" $
-    it "can encode strings" $
-      tson "foo" `shouldBe` jstring "foo"
+  describe "fromTransit . toTransit" $
+    it "can roundtrip strings" $
+      property $ \s -> roundtrip s == Just (s :: String)
+
+roundtrip :: (ToTransit a, FromTransit a) => a -> Maybe a
+roundtrip = fromTransit . toTransit

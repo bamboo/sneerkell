@@ -3,30 +3,34 @@
 module Data.Transit where
 
 import qualified Data.Aeson.Types as J
-import           Data.Scientific
+import           Data.ByteString
 import qualified Data.List as L
+import           Data.Scientific
 import qualified Data.Text as T
 import qualified Data.Vector as V
 
-data Transit where
-  Extension :: (Transitable a) => String -> a -> Transit
-  Map       :: (Transitable k, Transitable v) => [(k, v)] -> Transit
-  Keyword   :: String -> Transit
-  Str       :: String -> Transit
-  Number    :: Scientific -> Transit
+type ExtensionTag = T.Text
 
-class Transitable a where
-  transit :: a -> Transit
+data Transit = TExtension ExtensionTag Transit
+             | TMap [(Transit, Transit)]
+             | TKeyword T.Text
+             | TString T.Text
+             | TNumber Scientific
+             | TBytes ByteString
+             deriving (Show, Eq)
 
-instance Transitable Transit where
-  transit = id
+class ToTransit a where
+  toTransit :: a -> Transit
+
+class FromTransit a where
+  fromTransit :: Transit -> Maybe a
 
 instance J.ToJSON Transit where
-  toJSON (Extension tag v) = jarray [jstring $ "~#" ++ tag, tson v]
-  toJSON (Map kvs)         = jarray $ mapMarker : L.concatMap (\(k, v) -> [tson k, tson v]) kvs
-  toJSON (Keyword k)       = jstring $ "~:" ++ k
-  toJSON (Str s)           = jstring s
-  toJSON (Number n)        = J.Number n
+  toJSON (TExtension tag v) = jarray [J.String $ T.append "~#" tag, J.toJSON v]
+  toJSON (TMap kvs)         = jarray $ mapMarker : L.concatMap (\(k, v) -> [J.toJSON k, J.toJSON v]) kvs
+  toJSON (TKeyword k)       = J.String $ T.append "~:" k
+  toJSON (TString s)        = J.String s
+  toJSON (TNumber n)        = J.Number n
 
 jarray :: [J.Value] -> J.Value
 jarray = J.Array . V.fromList
@@ -37,8 +41,12 @@ jstring = J.String . T.pack
 mapMarker :: J.Value
 mapMarker = jstring "^ "
 
-tson :: (Transitable a) => a -> J.Value
-tson = J.toJSON . transit
+tson :: (ToTransit a) => a -> J.Value
+tson = J.toJSON . toTransit
 
-instance Transitable String where
-  transit = Str
+instance ToTransit String where
+  toTransit = TString . T.pack
+
+instance FromTransit String where
+  fromTransit (TString s) = Just $ T.unpack s
+  fromTransit _           = Nothing
