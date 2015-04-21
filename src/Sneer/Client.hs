@@ -1,12 +1,13 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Sneer.Client ( startClient
-                    , sendTuple
-                    , receiveTuple
-                    , stopClient
-                    , withClient
-                    , Client ()
-                    ) where
+module Sneer.Client
+       ( startClient
+       , sendTuple
+       , receiveTuple
+       , stopClient
+       , withClient
+       , Client ()
+       ) where
 
 import Control.Applicative
 import Control.Concurrent (threadDelay)
@@ -22,12 +23,12 @@ import Sneer.Protocol
 
 type TupleChan = TChan Tuple
 
-data Client = Client { _ownPuk     :: Address
-                     , _tuplesOut  :: TupleChan
-                     , _tuplesIn   :: TupleChan
-                     , _messenger  :: Messenger
-                     , _pingTask   :: Async ()
-                     , _sendTask   :: Async ()
+data Client = Client { _ownPuk    :: Address
+                     , _tuplesOut :: TupleChan
+                     , _tuplesIn  :: TupleChan
+                     , _messenger :: Messenger
+                     , _pingTask  :: Async ()
+                     , _sendTask  :: Async ()
                      }
 
 startClient :: Address -> IO Client

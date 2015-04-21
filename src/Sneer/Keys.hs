@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Sneer.Keys ( ownKeyAndAddress
-                  , PrvKey
-                  , Address (..)
-                  ) where
+module Sneer.Keys
+       ( ownKeyAndAddress
+       , PrvKey
+       , Address (..)
+       ) where
 
 import           Control.Applicative
 import           Data.Text

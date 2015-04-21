@@ -62,6 +62,7 @@ test-suite spec
                   , network
                   , sneerkell
                   , stm >= 2.4.2
+                  , vector
 
 test-suite hlint
   default-language: Haskell2010

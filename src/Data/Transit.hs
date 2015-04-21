@@ -1,18 +1,22 @@
-{-# LANGUAGE GADTs, TypeSynonymInstances, FlexibleInstances, OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE GADTs, TypeSynonymInstances, FlexibleInstances, OverloadedStrings, TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Data.Transit ( Transit(..)
-                    , ToTransit(..)
-                    , FromTransit(..)
-                    , number
-                    , string
-                    , tson
-                    , untson
-                    , J.encode
-                    , J.decode
-                    , T.pack
-                    , T.unpack
-                    ) where
+module Data.Transit
+       ( Transit(..)
+       , ToTransit(..)
+       , FromTransit(..)
+       , KeyValuePairs
+       , KeyValuePair
+       , number
+       , string
+       , tson
+       , untson
+       , J.encode
+       , J.decode
+       , T.pack
+       , T.unpack
+       ) where
 
 import           Control.Monad (mzero, guard)
 import qualified Data.Aeson as J
@@ -23,11 +27,14 @@ import           Data.Scientific
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Vector as V
+import           GHC.Exts (IsList(..))
 
-type ExtensionTag = T.Text
+type ExtensionTag  = T.Text
+type KeyValuePairs = V.Vector KeyValuePair
+type KeyValuePair  = (Transit, Transit)
 
 data Transit = TExtension !ExtensionTag !Transit
-             | TMap       ![(Transit, Transit)]
+             | TMap       !KeyValuePairs
              | TKeyword   !T.Text
              | TString    !T.Text
              | TNumber    !Scientific
@@ -65,7 +72,7 @@ instance FromTransit Integer where
 
 instance J.ToJSON Transit where
   toJSON (TExtension tag rep) = jarray [J.String $ T.append "~#" tag, J.toJSON rep]
-  toJSON (TMap kvs)           = jarray $ mapMarker : L.concatMap (\(k, v) -> [J.toJSON k, J.toJSON v]) kvs
+  toJSON (TMap kvs)           = jarray $ mapMarker : L.concatMap (\(k, v) -> [J.toJSON k, J.toJSON v]) (V.toList kvs)
   toJSON (TKeyword k)         = J.String $ T.append "~:" k
   toJSON (TString s)          = J.String s
   toJSON (TNumber n)          = J.Number n
@@ -89,7 +96,7 @@ instance J.FromJSON Transit where
   parseJSON (J.Array xs) = do
     guard $ V.length xs >= 1 && xs V.! 0 == mapMarker
     kvs <- V.mapM J.parseJSON $ V.tail xs
-    return $ TMap (pairs $ V.toList kvs)
+    return $ TMap (V.fromList $ pairs $ V.toList kvs)
   parseJSON _ = mzero
 
 pairs :: [a] -> [(a, a)]
@@ -110,3 +117,9 @@ untson v =
   case J.fromJSON v of
     J.Success t -> fromTransit t
     _           -> Nothing
+
+instance IsList (V.Vector a) where
+  type Item (V.Vector a) = a
+  fromList  = V.fromList
+  toList    = V.toList
+  fromListN = V.fromListN

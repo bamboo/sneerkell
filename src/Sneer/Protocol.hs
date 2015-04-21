@@ -1,13 +1,20 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE RecordWildCards, OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards, OverloadedStrings, OverloadedLists #-}
 
-module Sneer.Protocol where
+module Sneer.Protocol
+       ( FromClient(..)
+       , FromServer(..)
+       , Tuple(..)
+       , tt
+       ) where
 
 import           Control.Applicative ((<$>))
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Data.Text (pack)
 import qualified Data.Transit as T
+import           Data.Vector
+import qualified Data.Vector as V
 import           Network.Haskoin.Crypto (Address(..))
 import           Network.Haskoin.Internals (BigWord (..))
 import qualified Network.Haskoin.Util as U
@@ -28,7 +35,7 @@ type OwnPuk  = Address
 
 type PeerPuk = Address
 
-data Tuple = Tuple { _fields   :: ![(T.Transit, T.Transit)]
+data Tuple = Tuple { _fields   :: !T.KeyValuePairs
                    , _author   :: !Author
                    , _audience :: !Audience
                    , _id       :: !TupleId
@@ -58,6 +65,7 @@ paddedTo32Bytes bytes = BS.append (BS.replicate padding 0) bytes
 
 addrToInteger :: Address -> Integer
 addrToInteger (PubKeyAddress (BigWord n)) = n
+addrToInteger (ScriptAddress (BigWord n)) = n
 
 addrFromInteger :: Integer -> Address
 addrFromInteger = PubKeyAddress . BigWord
@@ -84,8 +92,11 @@ instance T.ToTransit FromClient where
            ]
 
 instance T.FromTransit FromServer where
-  fromTransit (T.TMap kvs) = Accept <$> (lookup (k "send") kvs >>= T.fromTransit)
+  fromTransit (T.TMap kvs) = Accept <$> (tryGet (k "send") kvs >>= T.fromTransit)
   fromTransit _            = Nothing
+
+tryGet :: (Eq a) => a -> Vector (a, b) -> Maybe b
+tryGet key kvs = snd <$> V.find ((== key) . fst) kvs
 
 k :: String -> T.Transit
 k = T.TKeyword . pack
@@ -94,23 +105,35 @@ tt :: (T.ToTransit a) => a -> T.Transit
 tt = T.toTransit
 
 instance T.ToTransit Tuple where
-  toTransit Tuple{..} = T.TMap $ [(T.string "id", T.number _id)
-                                 ,(T.string "author", tt _author)
-                                 ,(T.string "audience", tt _audience)
-                                 ] ++ _fields
+  toTransit Tuple{..} =
+    T.TMap $ builtinFields V.++ _fields
+   where
+    builtinFields = [(idField,       T.number _id)
+                    ,(authorField,   tt _author)
+                    ,(audienceField, tt _audience)
+                    ]
 
 instance T.FromTransit Tuple where
   fromTransit (T.TMap kvs) = do
     _id <- parse idField
     _author <- parse authorField
     _audience <- parse audienceField
-    let _fields = filter isCustomField kvs
+    let _fields = V.filter isCustomField kvs
     return Tuple{..}
    where
-    parse field = T.fromTransit =<< lookup field kvs
-    idField = T.TString "id"
-    authorField = T.TString "author"
-    audienceField = T.TString "audience"
-    isCustomField (field, _) = field `notElem` [idField, authorField, audienceField]
-
+    parse field = T.fromTransit =<< tryGet field kvs
   fromTransit _ = Nothing
+
+idField :: T.Transit
+idField = T.TString "id"
+
+authorField :: T.Transit
+authorField = T.TString "author"
+
+audienceField :: T.Transit
+audienceField = T.TString "audience"
+
+isCustomField :: T.KeyValuePair -> Bool
+isCustomField (field, _) = field /= idField
+                        && field /= authorField
+                        && field /= audienceField

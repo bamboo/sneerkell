@@ -6,6 +6,7 @@ module Data.TransitSpec where
 import qualified Data.Aeson as J
 import qualified Data.ByteString as BS
 import           Data.Transit
+import qualified Data.Vector as V
 import           Data.Word
 import           Test.Hspec
 import           Test.Hspec.SmallCheck
@@ -42,6 +43,9 @@ instance (Monad m) => Serial m BS.ByteString where
 
 instance (Monad m) => Serial m Word8 where
   series = cons1 (\i -> fromIntegral (i :: Int))
+
+instance (Monad m, Serial m a) => Serial m (V.Vector a) where
+  series = cons1 V.fromList
 
 keyword :: NonEmpty Char -> Transit
 keyword (NonEmpty cs) = TKeyword $ pack cs

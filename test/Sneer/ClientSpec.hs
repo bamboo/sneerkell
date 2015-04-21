@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Sneer.ClientSpec where
 
 import Control.Concurrent.STM
