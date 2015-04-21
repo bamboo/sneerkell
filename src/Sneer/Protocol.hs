@@ -4,9 +4,13 @@
 module Sneer.Protocol where
 
 import           Control.Applicative ((<$>))
+import           Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
+import           Data.Text (pack)
 import qualified Data.Transit as T
-import           Data.Text (pack, unpack)
-import           Network.Haskoin.Crypto (Address, addrToBase58, base58ToAddr)
+import           Network.Haskoin.Crypto (Address(..))
+import           Network.Haskoin.Internals (BigWord (..))
+import qualified Network.Haskoin.Util as U
 
 data FromClient = PingFrom  !OwnPuk
                 | SendFrom  !OwnPuk !PeerPuk !Tuple
@@ -35,11 +39,28 @@ type Author   = Address
 type TupleId  = Integer
 
 instance T.ToTransit Address where
-  toTransit = T.TExtension "puk" . T.toTransit . addrToBase58
+  toTransit = T.TExtension "puk" . T.toTransit . paddedTo32Bytes . U.integerToBS . addrToInteger
 
 instance T.FromTransit Address where
-  fromTransit (T.TExtension "puk" (T.TString repr)) = base58ToAddr $ unpack repr
+  fromTransit (T.TExtension "puk" (T.TBytes bytes)) = Just $ addrFromInteger $ U.bsToInteger bytes
   fromTransit _ = Nothing
+
+instance T.ToTransit ByteString where
+  toTransit = T.TBytes
+
+instance T.FromTransit ByteString where
+  fromTransit (T.TBytes bytes) = Just bytes
+  fromTransit _                = Nothing
+
+paddedTo32Bytes :: ByteString -> ByteString
+paddedTo32Bytes bytes = BS.append (BS.replicate padding 0) bytes
+ where padding = 32 - BS.length bytes
+
+addrToInteger :: Address -> Integer
+addrToInteger (PubKeyAddress (BigWord n)) = n
+
+addrFromInteger :: Integer -> Address
+addrFromInteger = PubKeyAddress . BigWord
 
 instance T.ToTransit FromClient where
   toTransit (PingFrom ownPuk) =

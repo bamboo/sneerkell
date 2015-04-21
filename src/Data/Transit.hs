@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs, TypeSynonymInstances, FlexibleInstances, OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Data.Transit ( Transit(..)
                     , ToTransit(..)
@@ -16,9 +17,11 @@ module Data.Transit ( Transit(..)
 import           Control.Monad (mzero, guard)
 import qualified Data.Aeson as J
 import           Data.ByteString
+import qualified Data.ByteString.Base64 as Base64
 import qualified Data.List as L
 import           Data.Scientific
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Vector as V
 
 type ExtensionTag = T.Text
@@ -66,11 +69,23 @@ instance J.ToJSON Transit where
   toJSON (TKeyword k)         = J.String $ T.append "~:" k
   toJSON (TString s)          = J.String s
   toJSON (TNumber n)          = J.Number n
-  toJSON (TBytes _)           = error "not implemented"
+  toJSON (TBytes bs)          = J.String $ T.append "~b" $ toBase64 bs
+
+toBase64 :: ByteString -> T.Text
+toBase64 = T.decodeUtf8 . Base64.encode
+
+fromBase64 :: T.Text -> ByteString
+fromBase64 = Base64.decodeLenient . T.encodeUtf8
 
 instance J.FromJSON Transit where
-  parseJSON (J.String s) = return $ TString s
-  parseJSON (J.Number n) = return $ TNumber n
+  parseJSON (J.String (T.stripPrefix "~:" -> Just keyword)) =
+    return $ TKeyword keyword
+  parseJSON (J.String (T.stripPrefix "~b" -> Just base64)) =
+    return $ TBytes $ fromBase64 base64
+  parseJSON (J.String s) =
+    return $ TString s
+  parseJSON (J.Number n) =
+    return $ TNumber n
   parseJSON (J.Array xs) = do
     guard $ V.length xs >= 1 && xs V.! 0 == mapMarker
     kvs <- V.mapM J.parseJSON $ V.tail xs

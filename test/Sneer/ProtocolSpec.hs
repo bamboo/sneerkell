@@ -12,8 +12,10 @@ import Test.SmallCheck.Series
 
 spec :: Spec
 spec =
-  describe "Tuple" $
-    it "can be Transit roundtripped" $
+  describe "Transit" $ do
+    it "can roundtrip addresses" $
+      property $ \a -> roundtrip a == Just (a :: Address)
+    it "can roundtrip tuples" $
       property $ \s -> roundtrip s == Just (s :: Tuple)
 
 instance (Monad m) => Serial m Tuple where
