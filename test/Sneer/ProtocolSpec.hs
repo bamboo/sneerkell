@@ -17,7 +17,7 @@ spec =
       property $ \s -> roundtrip s == Just (s :: Tuple)
 
 instance (Monad m) => Serial m Tuple where
-  series = localDepth (const 3) $ cons4 Tuple
+  series = localDepth (min 3) $ cons4 Tuple
 
 instance (Monad m) => Serial m Address where
   series = cons1 address
