@@ -65,7 +65,7 @@ paddedTo32Bytes bytes = BS.append (BS.replicate padding 0) bytes
 
 addrToInteger :: Address -> Integer
 addrToInteger (PubKeyAddress (BigWord n)) = n
-addrToInteger (ScriptAddress (BigWord n)) = n
+addrToInteger _                           = error "Unsupported Address type"
 
 addrFromInteger :: Integer -> Address
 addrFromInteger = PubKeyAddress . BigWord
