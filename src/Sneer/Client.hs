@@ -23,8 +23,6 @@ import Sneer.Protocol
 type TupleChan = TChan Tuple
 
 data Client = Client { _ownPuk     :: Address
-                     , _packetsOut :: JChan
-                     , _packetsIn  :: JChan
                      , _tuplesOut  :: TupleChan
                      , _tuplesIn   :: TupleChan
                      , _messenger  :: Messenger
@@ -35,14 +33,14 @@ data Client = Client { _ownPuk     :: Address
 startClient :: Address -> IO Client
 startClient ownPuk = do
   let _ownPuk =  ownPuk
-  _packetsOut <- newTChanIO
-  _packetsIn  <- newTChanIO
+  packetsOut  <- newTChanIO
+  packetsIn   <- newTChanIO
   _tuplesOut  <- newTChanIO
   _tuplesIn   <- newTChanIO
-  _messenger  <- startMessenger _packetsOut _packetsIn =<< serverAddr
-  _pingTask   <- async $ pingLoop _packetsOut _ownPuk
-  _sendTask   <- async $ sendLoop _packetsOut _tuplesOut _ownPuk
-  _recvTask   <- async $ recvLoop _packetsIn _tuplesIn
+  _messenger  <- startMessenger packetsOut packetsIn =<< serverAddr
+  _pingTask   <- async $ pingLoop packetsOut _ownPuk
+  _sendTask   <- async $ sendLoop packetsOut _tuplesOut _ownPuk
+  _recvTask   <- async $ recvLoop packetsOut packetsIn _tuplesIn
   return Client{..}
  where
   serverAddr = SockAddrInet serverPort <$> inet_addr serverHost
@@ -54,22 +52,25 @@ withClient puk = bracket (startClient puk) stopClient
 
 sendLoop :: JChan -> TupleChan -> Address -> IO ()
 sendLoop packetsOut tuplesOut ownPuk =
-  forever $ do
-    (sentPacket, _) <- atomically $ do
+  forever $
+    atomically $ do
       tuple <- readTChan tuplesOut
       let packet = tson $ SendFrom ownPuk (_audience tuple) tuple
       writeTChan packetsOut packet
-      return (packet, tuple)
-    putStrLn $ "OUT: " ++ show sentPacket
 
-recvLoop :: JChan -> TupleChan -> IO ()
-recvLoop packetsIn tuplesIn =
+recvLoop :: JChan -> JChan -> TupleChan -> IO ()
+recvLoop packetsOut packetsIn tuplesIn =
   forever $ do
     packet <- atomically $ readTChan packetsIn
-    putStrLn $ "IN: " ++ show packet
-    case untson packet of
-      Just (Accept tuple) -> atomically $ writeTChan tuplesIn tuple
-      _                   -> return ()
+    case untson packet :: Maybe FromServer of
+      Just (Accept tuple@Tuple{..}) -> do
+        putStrLn $ "TUPLE IN: " ++ show tuple
+        let ack = tson $ AckAccept _audience _author _id
+        atomically $ do
+          writeTChan tuplesIn tuple
+          writeTChan packetsOut ack
+      _                             ->
+        putStrLn $ "FAILED TO DECODE PACKET: " ++ show packet
 
 sendTuple :: Client -> Tuple -> STM ()
 sendTuple Client{..} = writeTChan _tuplesOut
