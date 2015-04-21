@@ -14,7 +14,7 @@ import Control.Concurrent.Async
 import Control.Concurrent.STM
 import Control.Exception (bracket)
 import Control.Monad (forever)
-import Data.Transit (tson)
+import Data.Transit (tson, untson)
 import Network.Socket
 import Network.UdpMessenger
 import Sneer.Keys
@@ -63,10 +63,13 @@ sendLoop packetsOut tuplesOut ownPuk =
     putStrLn $ "OUT: " ++ show sentPacket
 
 recvLoop :: JChan -> TupleChan -> IO ()
-recvLoop packetsIn _ =
+recvLoop packetsIn tuplesIn =
   forever $ do
     packet <- atomically $ readTChan packetsIn
     putStrLn $ "IN: " ++ show packet
+    case untson packet of
+      Just (Accept tuple) -> atomically $ writeTChan tuplesIn tuple
+      _                   -> return ()
 
 sendTuple :: Client -> Tuple -> STM ()
 sendTuple Client{..} = writeTChan _tuplesOut

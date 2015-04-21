@@ -19,6 +19,9 @@ data Transit = TExtension ExtensionTag Transit
              | TBytes ByteString
              deriving (Show, Eq)
 
+number :: (Integral a) => a -> Transit
+number = TNumber . fromIntegral
+
 class ToTransit a where
   toTransit :: a -> Transit
 
@@ -32,6 +35,9 @@ instance J.ToJSON Transit where
   toJSON (TString s)        = J.String s
   toJSON (TNumber n)        = J.Number n
 
+instance J.FromJSON Transit where
+  parseJSON _ = error "not implemented"
+
 jarray :: [J.Value] -> J.Value
 jarray = J.Array . V.fromList
 
@@ -44,9 +50,21 @@ mapMarker = jstring "^ "
 tson :: (ToTransit a) => a -> J.Value
 tson = J.toJSON . toTransit
 
+untson :: (FromTransit a) => J.Value -> Maybe a
+untson v =
+  case J.fromJSON v of
+    J.Success t -> fromTransit t
+    _           -> Nothing
+
 instance ToTransit String where
   toTransit = TString . T.pack
 
 instance FromTransit String where
   fromTransit (TString s) = Just $ T.unpack s
   fromTransit _           = Nothing
+
+instance FromTransit Integer where
+  fromTransit (TNumber n) =
+    case floatingOrInteger n :: Either Double Integer of
+      Right i -> Just i
+      _       -> Nothing
