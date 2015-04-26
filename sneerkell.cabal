@@ -21,11 +21,12 @@ library
                   , Network.UdpMessenger
                   , Sneer.Protocol
                   , Data.Transit
+                  , Data.Transit.Cache
   build-depends:    aeson
                   , async
                   , base >= 4 && < 5
-                  , bytestring
                   , base64-bytestring
+                  , bytestring
                   , haskoin
                   , network
                   , scientific
@@ -33,6 +34,7 @@ library
                   , system-fileio
                   , system-filepath
                   , text
+                  , unordered-containers
                   , vector
 
 executable sneerkell
@@ -42,8 +44,8 @@ executable sneerkell
   hs-source-dirs:   main
   main-is:          Main.hs
   build-depends:    base >= 4 && < 5
-                  , network
                   , haskoin
+                  , network
                   , sneerkell
 
 test-suite spec
@@ -62,6 +64,8 @@ test-suite spec
                   , network
                   , sneerkell
                   , stm >= 2.4.2
+                  , text
+                  , unordered-containers
                   , vector
 
 test-suite hlint
