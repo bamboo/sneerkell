@@ -17,9 +17,12 @@ empty = HM.empty
 
 insert :: T.Text -> Cache -> Cache
 insert value cache =
-  let index  = HM.size cache
-      key    = indexToCode index
-  in HM.insert key value cache
+  if T.length value <= 3
+  then cache
+  else
+    let index  = HM.size cache
+        key    = indexToCode index
+    in HM.insert key value cache
 
 lookup :: T.Text -> Cache -> Maybe T.Text
 lookup = HM.lookup
@@ -30,7 +33,7 @@ indexToCode index = T.append codePrefix $
     then charCode lo
     else T.append (charCode hi) (charCode lo)
  where
-  (lo, hi)        = index `divMod` cacheCodeDigits
+  (hi, lo)        = index `divMod` cacheCodeDigits
   charCode        = T.singleton . chr . (+ baseCharIndex)
   cacheCodeDigits = 44 :: Int
   baseCharIndex   = 48 :: Int
