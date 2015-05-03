@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, OverloadedStrings, OverloadedLists #-}
 
 module Data.TransitSpec where
 
@@ -21,9 +21,16 @@ spec = do
     it "can roundtrip integers" $
       property $ \i -> roundtrip i == Just (i :: Integer)
 
-  describe "Transit" $
+  describe "Transit" $ do
     it "can be encoded to json" $
       property $ \t -> jsonRoundtrip t == J.Success (t :: Transit)
+
+    it "can decode cache references" $
+      let json = "[\"^ \",\"a\",[\"^ \",\"~:value\",1],\"b\",[\"^ \",\"^1\",2]]"
+          expected = TMap [(string "a", TMap [(TKeyword "value", integer 1)])
+                          ,(string "b", TMap [(TKeyword "value", integer 2)])]
+          actual = J.decode json :: Maybe Transit
+      in actual `shouldBe` Just expected
 
 roundtrip :: (ToTransit a, FromTransit a) => a -> Maybe a
 roundtrip = fromTransit . toTransit
