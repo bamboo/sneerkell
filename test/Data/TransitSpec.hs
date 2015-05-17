@@ -5,6 +5,7 @@ module Data.TransitSpec where
 
 import qualified Data.Aeson as J
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
 import           Data.Transit
 import qualified Data.Vector as V
 import           Data.Word
@@ -45,6 +46,7 @@ instance (Monad m) => Serial m Transit where
         \/ cons1 keyword
         \/ cons1 TMap
         \/ cons1 TBytes
+        \/ localDepth (const 2) (cons2 extension)
 
 instance (Monad m) => Serial m BS.ByteString where
   series = cons1 BS.pack
@@ -58,3 +60,5 @@ instance (Monad m, Serial m a) => Serial m (V.Vector a) where
 keyword :: NonEmpty Char -> Transit
 keyword (NonEmpty cs) = TKeyword $ pack cs
 
+extension :: NonEmpty Char -> Transit -> Transit
+extension (NonEmpty tag) = TExtension (T.pack tag)
