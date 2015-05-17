@@ -26,11 +26,12 @@ spec = do
       property $ \t -> jsonRoundtrip t == J.Success (t :: Transit)
 
     it "can decode cache references" $
-      let json = "[\"^ \",\"a\",[\"^ \",\"~:value\",1],\"b\",[\"^ \",\"^1\",2]]"
+      let json     = "[\"^ \",\"a\",[\"^ \",\"~:value\",1],\"b\",[\"^ \",\"^0\",2]]"
           expected = TMap [(string "a", TMap [(TKeyword "value", integer 1)])
                           ,(string "b", TMap [(TKeyword "value", integer 2)])]
-          actual = J.decode json :: Maybe Transit
+          actual   = J.decode json :: Maybe Transit
       in actual `shouldBe` Just expected
+
 
 roundtrip :: (ToTransit a, FromTransit a) => a -> Maybe a
 roundtrip = fromTransit . toTransit
@@ -57,5 +58,3 @@ instance (Monad m, Serial m a) => Serial m (V.Vector a) where
 keyword :: NonEmpty Char -> Transit
 keyword (NonEmpty cs) = TKeyword $ pack cs
 
-integer :: Integer -> Transit
-integer = TNumber . fromIntegral

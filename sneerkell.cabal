@@ -22,18 +22,22 @@ library
                   , Sneer.Protocol
                   , Data.Transit
                   , Data.Transit.Cache
+                  , Data.Transit.Parser
+                  , Data.Transit.Value
   build-depends:    aeson
                   , async
                   , base >= 4 && < 5
                   , base64-bytestring
                   , bytestring
                   , haskoin
+                  , mtl
                   , network
                   , scientific
                   , stm >= 2.4.2
                   , system-fileio
                   , system-filepath
                   , text
+                  , transformers >= 0.3.0.0
                   , unordered-containers
                   , vector
 
