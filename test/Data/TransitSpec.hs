@@ -33,6 +33,16 @@ spec = do
           actual   = J.decode json :: Maybe Transit
       in actual `shouldBe` Just expected
 
+    it "can decode cache references in tag position" $
+      let json     = "[\"^ \",\"a\",[\"~#puk\",1],\"b\",[\"^0\",2]]"
+          expected = TMap [(string "a", TExtension "puk" (integer 1))
+                          ,(string "b", TExtension "puk" (integer 2))]
+          actual   = J.decode json :: Maybe Transit
+      in actual `shouldBe` Just expected
+
+    -- TODO: test caching of nested map keys to ensure proper ordering
+    -- let json = "[\"^ \",\"~:send\",[\"^ \",\"id\",1,\"author\",[\"~#puk\",\"~bAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE=\"],\"audience\",[\"^2\",\"~bAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=\"],\"value\",\"42\"]]"
+
 
 roundtrip :: (ToTransit a, FromTransit a) => a -> Maybe a
 roundtrip = fromTransit . toTransit

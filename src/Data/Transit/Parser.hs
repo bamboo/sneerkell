@@ -1,20 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns      #-}
 
 module Data.Transit.Parser where
 
-import           Control.Applicative            ((<|>))
-import           Control.Monad                  (guard, mzero, when)
+import           Control.Applicative ((<|>))
+import           Control.Monad (guard, mzero, when)
 import           Control.Monad.Trans.State.Lazy
-import qualified Data.Aeson                     as J
+import qualified Data.Aeson as J
 import           Data.ByteString
-import qualified Data.ByteString.Base64         as Base64
-import qualified Data.List                      as L
-import qualified Data.Text                      as T
-import qualified Data.Text.Encoding             as T
-import qualified Data.Transit.Cache             as TC
+import qualified Data.ByteString.Base64 as Base64
+import           Data.Maybe (fromMaybe)
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import qualified Data.Transit.Cache as TC
 import           Data.Transit.Value
-import qualified Data.Vector                    as V
+import qualified Data.Vector as V
 
 type TransitParser t = StateT TC.Cache Maybe t
 
@@ -33,18 +32,30 @@ parse _            = mzero
 parseMap :: V.Vector J.Value -> TransitParser Transit
 parseMap xs = do
   guard $ V.length xs >= 1 && (xs V.! 0) == mapMarker
-  let (ks, vs) = L.unzip . pairs . V.toList . V.tail $ xs
-  ks' <- mapM parseKey ks
-  vs' <- mapM parse vs
-  return $ TMap (V.fromList $ L.zip ks' vs')
+  let kvs = V.tail xs
+  let ikvs = V.indexed kvs
+  kvs' <- V.mapM parseKeyOrValue ikvs
+  return $ TMap (V.fromList . pairs . V.toList $ kvs')
+
+parseKeyOrValue :: (Int, J.Value) -> TransitParser Transit
+parseKeyOrValue (idx, value) =
+  if even idx
+     then parseKey value
+     else parse value
 
 parseExtension :: V.Vector J.Value -> TransitParser Transit
 parseExtension xs = do
   guard $ V.length xs == 2
   case xs V.! 0 of
-    J.String (T.stripPrefix "~#" -> Just tag) -> do
-      repr <- parse $ xs V.! 1
-      return $ TExtension tag repr
+    J.String s -> do
+      cache <- get
+      let s' = fromMaybe s (TC.lookup s cache)
+      case T.stripPrefix "~#" s' of
+        Just tag -> do
+          when (s == s') $ modify $ TC.insert s
+          rep <- parse $ xs V.! 1
+          return $ TExtension tag rep
+        _        -> mzero
     _ -> mzero
 
 parseKey :: J.Value -> TransitParser Transit
