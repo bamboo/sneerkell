@@ -1,5 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE GADTs, TypeSynonymInstances, FlexibleInstances, OverloadedStrings, TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE GADTs                #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Data.Transit
        ( Transit(..)
@@ -26,10 +30,10 @@ import qualified Data.List as L
 import           Data.Scientific
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import           Data.Transit.Value
 import qualified Data.Transit.Parser as P
+import           Data.Transit.Value
 import qualified Data.Vector as V
-import           GHC.Exts (IsList(..))
+import           GHC.Exts (IsList (..))
 
 class ToTransit a where
   toTransit :: a -> Transit

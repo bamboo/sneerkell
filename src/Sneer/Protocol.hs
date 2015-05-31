@@ -141,7 +141,7 @@ instance T.FromTransit Tuple where
     let _fields = V.filter isCustomField kvs
     return Tuple{..}
    where
-    parse field = T.fromTransit =<< tryGet field kvs
+    parse field = tryGetFromTransit field kvs
   fromTransit _ = Nothing
 
 idField :: T.Transit

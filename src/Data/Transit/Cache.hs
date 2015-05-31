@@ -18,11 +18,11 @@ empty = HM.empty
 insert :: T.Text -> Cache -> Cache
 insert value cache =
   if T.length value <= 3
-  then cache
-  else
-    let index  = HM.size cache
-        key    = indexToCode index
-    in HM.insert key value cache
+    then cache
+    else
+      let index = HM.size cache
+          key   = indexToCode index
+      in HM.insert key value cache
 
 lookup :: T.Text -> Cache -> Maybe T.Text
 lookup = HM.lookup
