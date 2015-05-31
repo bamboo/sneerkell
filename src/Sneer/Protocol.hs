@@ -8,7 +8,7 @@ module Sneer.Protocol
        , tt
        ) where
 
-import           Control.Applicative ((<$>))
+import           Control.Applicative ((<$>), (<|>), (<*>))
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Data.Text (pack)
@@ -92,8 +92,28 @@ instance T.ToTransit FromClient where
            ]
 
 instance T.FromTransit FromServer where
-  fromTransit (T.TMap kvs) = Accept <$> (tryGet (k "send") kvs >>= T.fromTransit)
+  fromTransit (T.TMap kvs) = parseAck kvs <|> parseAccept kvs
   fromTransit _            = Nothing
+
+parseAck :: T.KeyValuePairs -> Maybe FromServer
+parseAck kvs =
+  Ack <$> tryGetFromTransit forKeyword kvs
+      <*> tryGetFromTransit ackKeyword kvs
+
+forKeyword :: T.Transit
+forKeyword = k "for"
+
+ackKeyword :: T.Transit
+ackKeyword = k "ack"
+
+parseAccept :: T.KeyValuePairs -> Maybe FromServer
+parseAccept kvs = Accept <$> tryGetFromTransit sendKeyword kvs
+
+tryGetFromTransit :: T.FromTransit a => T.Transit -> T.KeyValuePairs -> Maybe a
+tryGetFromTransit key kvs = tryGet key kvs >>= T.fromTransit
+
+sendKeyword :: T.Transit
+sendKeyword = k "send"
 
 tryGet :: (Eq a) => a -> Vector (a, b) -> Maybe b
 tryGet key kvs = snd <$> V.find ((== key) . fst) kvs
