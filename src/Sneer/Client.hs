@@ -70,6 +70,11 @@ recvLoop packetsOut packetsIn tuplesIn =
         atomically $ do
           writeTChan tuplesIn tuple
           writeTChan packetsOut ack
+
+      Just (Ack _ tupleId)          ->
+        -- TODO: use to control retries
+        putStrLn $ "ACK: " ++ show tupleId
+
       _                             ->
         putStrLn $ "FAILED TO DECODE PACKET: " ++ show packet
 

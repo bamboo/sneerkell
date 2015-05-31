@@ -17,11 +17,10 @@ spec :: Spec
 spec =
   describe "clients" $
     it "can exchange tuples" $
-      pendingWith "missing support for transit caching"
---       withClient neide $ \n ->
---       withClient maico $ \m -> do
---         atomically $ sendTuple n tuple
---         Just tupleReceived <- withTimeout . atomically $ receiveTuple m
---         tupleReceived `shouldBe` tuple
--- where
---  tuple = Tuple [(tt "value", tt "42")] neide maico 1
+      withClient neide $ \n ->
+      withClient maico $ \m -> do
+        atomically $ sendTuple n tuple
+        Just tupleReceived <- withTimeout . atomically $ receiveTuple m
+        tupleReceived `shouldBe` tuple
+ where
+  tuple = Tuple [(tt "value", tt "42")] neide maico 1

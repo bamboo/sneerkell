@@ -62,6 +62,7 @@ sendTo socket msg serverAddr = do
 tryRecvFrom :: Socket -> IO (Maybe J.Value)
 tryRecvFrom socket = do
   (bytes, _) <- NSB.recvFrom socket 1024
+  BSC8.putStrLn bytes
   let bytes' = BSL.fromStrict bytes
   return $ decode bytes'
 
