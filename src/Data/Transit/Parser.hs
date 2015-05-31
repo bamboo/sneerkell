@@ -1,19 +1,20 @@
-{-# LANGUAGE OverloadedStrings, ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module Data.Transit.Parser where
 
-import           Control.Applicative ((<|>))
-import           Control.Monad (guard, mzero, when)
+import           Control.Applicative            ((<|>))
+import           Control.Monad                  (guard, mzero, when)
 import           Control.Monad.Trans.State.Lazy
-import qualified Data.Aeson as J
+import qualified Data.Aeson                     as J
 import           Data.ByteString
-import qualified Data.ByteString.Base64 as Base64
-import qualified Data.List as L
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import qualified Data.Transit.Cache as TC
+import qualified Data.ByteString.Base64         as Base64
+import qualified Data.List                      as L
+import qualified Data.Text                      as T
+import qualified Data.Text.Encoding             as T
+import qualified Data.Transit.Cache             as TC
 import           Data.Transit.Value
-import qualified Data.Vector as V
+import qualified Data.Vector                    as V
 
 type TransitParser t = StateT TC.Cache Maybe t
 
@@ -27,15 +28,15 @@ parse :: J.Value -> TransitParser Transit
 parse (J.Number n) = return $ TNumber n
 parse (J.String s) = parseString False s
 parse (J.Array xs) = parseMap xs <|> parseExtension xs
-parse _ = mzero
+parse _            = mzero
 
 parseMap :: V.Vector J.Value -> TransitParser Transit
 parseMap xs = do
   guard $ V.length xs >= 1 && (xs V.! 0) == mapMarker
-  let kvs = V.toList . V.tail $ xs
-      ikvs = L.zip [0..] kvs
-  kvs' <- mapM parseKeyOrValue ikvs
-  return $ TMap (V.fromList $ pairs kvs')
+  let (ks, vs) = L.unzip . pairs . V.toList . V.tail $ xs
+  ks' <- mapM parseKey ks
+  vs' <- mapM parse vs
+  return $ TMap (V.fromList $ L.zip ks' vs')
 
 parseExtension :: V.Vector J.Value -> TransitParser Transit
 parseExtension xs = do
@@ -46,12 +47,6 @@ parseExtension xs = do
       return $ TExtension tag repr
     _ -> mzero
 
-parseKeyOrValue :: (Integer, J.Value) -> TransitParser Transit
-parseKeyOrValue (i, kv) =
-  if odd i
-     then parse kv
-     else parseKey kv
-
 parseKey :: J.Value -> TransitParser Transit
 parseKey (J.String s) = parseString True s
 parseKey v = parse v
@@ -60,8 +55,8 @@ parseString :: Bool -> T.Text -> TransitParser Transit
 parseString updateCache s = do
   s' <- cacheString updateCache s
   return $ case T.stripPrefix "~:" s' of
-    Just prefix -> TKeyword prefix
-    Nothing     ->
+    Just keyword -> TKeyword keyword
+    Nothing      ->
       case T.stripPrefix "~b" s' of
         Just base64 -> TBytes $ fromBase64 base64
         Nothing     -> TString s'
