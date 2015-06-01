@@ -33,7 +33,6 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Transit.Parser as P
 import           Data.Transit.Value
 import qualified Data.Vector as V
-import           GHC.Exts (IsList (..))
 
 class ToTransit a where
   toTransit :: a -> Transit
@@ -91,9 +90,3 @@ untson v =
   case J.fromJSON v of
     J.Success t -> fromTransit t
     _           -> Nothing
-
-instance IsList (V.Vector a) where
-  type Item (V.Vector a) = a
-  fromList  = V.fromList
-  toList    = V.toList
-  fromListN = V.fromListN
