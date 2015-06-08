@@ -32,15 +32,19 @@ spec =
       in fromTransit packet `shouldBe` Just (Ack peerPuk tupleId)
 
     it "can decode Send" $
-      let json = J.Array [J.String "^ "
-                         ,J.String "~:send"
-                         ,J.Array [J.String "^ "
-                                  ,J.String "id", J.Number 1.0
-                                  ,J.String "author", J.Array [J.String "~#puk"
-                                                              ,J.String "~bAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE="]
-                                  ,J.String "audience", J.Array [J.String "^2"
-                                                                ,J.String "~bAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI="]
-                                  ,J.String "value", J.String "42"]]
+      let json = J.Array
+                   [J.String "^ "
+                   ,J.String "~:send"
+                   ,J.Array
+                      [J.String "^ "
+                      ,J.String "id", J.Number 1.0
+                      ,J.String "author", J.Array
+                                            [J.String "~#puk"
+                                            ,J.String "~bAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE="]
+                      ,J.String "audience", J.Array
+                                              [J.String "^2"
+                                              ,J.String "~bAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI="]
+                      ,J.String "value", J.String "42"]]
           author   = address 1
           audience = address 2
           fields   = V.fromList [(TString "value", TString "42")]

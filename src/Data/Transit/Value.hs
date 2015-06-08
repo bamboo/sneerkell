@@ -17,7 +17,7 @@ data Transit = TExtension !ExtensionTag !Transit
              | TBytes     !ByteString
              deriving (Eq, Show)
 
-number :: (Integral a) => a -> Transit
+number :: Integral a => a -> Transit
 number = TNumber . fromIntegral
 
 integer :: Integer -> Transit

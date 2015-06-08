@@ -82,10 +82,10 @@ jarray = J.Array . V.fromList
 mapMarker :: J.Value
 mapMarker = J.String "^ "
 
-tson :: (ToTransit a) => a -> J.Value
+tson :: ToTransit a => a -> J.Value
 tson = J.toJSON . toTransit
 
-untson :: (FromTransit a) => J.Value -> Maybe a
+untson :: FromTransit a => J.Value -> Maybe a
 untson v =
   case J.fromJSON v of
     J.Success t -> fromTransit t
