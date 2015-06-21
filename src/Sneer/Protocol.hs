@@ -7,11 +7,13 @@ module Sneer.Protocol
        , Tuple(..)
        , tt
        , addressBytes
+       , addressFromHex
        ) where
 
 import           Control.Applicative ((<$>), (<|>), (<*>))
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base16 as Base16
 import           Data.Text (pack)
 import qualified Data.Transit as T
 import           Data.Vector
@@ -48,6 +50,9 @@ type TupleId  = Integer
 
 addressBytes :: Address -> ByteString
 addressBytes = paddedTo32Bytes . U.integerToBS . addrToInteger
+
+addressFromHex :: ByteString -> Address
+addressFromHex = addrFromInteger . U.bsToInteger . fst . Base16.decode
 
 instance T.ToTransit Address where
   toTransit = T.TExtension "puk" . T.toTransit . addressBytes

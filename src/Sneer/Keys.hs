@@ -8,8 +8,9 @@ module Sneer.Keys
        ) where
 
 import           Control.Applicative
+import qualified Data.ByteString.Base16 as Base16
 import           Data.Text
-import           Data.Transit (toBase64)
+import           Data.Text.Encoding (decodeUtf8)
 import           Filesystem
 import           Filesystem.Path.CurrentOS
 import           Network.Haskoin.Crypto
@@ -17,8 +18,8 @@ import           Prelude hiding (FilePath)
 import           Sneer.Protocol (addressBytes)
 import qualified System.IO.Error as IO
 
-addressString :: Address -> String
-addressString = unpack . toBase64 . addressBytes
+addressString :: Address -> Text
+addressString = decodeUtf8 . Base16.encode . addressBytes
 
 ownKeyAndAddress :: IO (PrvKey, Address)
 ownKeyAndAddress = do
