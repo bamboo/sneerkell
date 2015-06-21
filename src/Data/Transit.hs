@@ -16,6 +16,7 @@ module Data.Transit
        , string
        , tson
        , untson
+       , toBase64
        , J.encode
        , J.decode
        , T.pack

@@ -6,6 +6,7 @@ module Sneer.Protocol
        , FromServer(..)
        , Tuple(..)
        , tt
+       , addressBytes
        ) where
 
 import           Control.Applicative ((<$>), (<|>), (<*>))
@@ -45,8 +46,11 @@ type Audience = Address
 type Author   = Address
 type TupleId  = Integer
 
+addressBytes :: Address -> ByteString
+addressBytes = paddedTo32Bytes . U.integerToBS . addrToInteger
+
 instance T.ToTransit Address where
-  toTransit = T.TExtension "puk" . T.toTransit . paddedTo32Bytes . U.integerToBS . addrToInteger
+  toTransit = T.TExtension "puk" . T.toTransit . addressBytes
 
 instance T.FromTransit Address where
   fromTransit (T.TExtension "puk" (T.TBytes bytes)) = Just $ addrFromInteger $ U.bsToInteger bytes

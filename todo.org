@@ -1,6 +1,13 @@
-* transit caching - https://github.com/cognitect/transit-format#caching
-* reliable messaging
+* milestone - echo service
+A sneer party that can be added as a contact and will simply echo any
+message sent to it back.
+
+** reply to invites
+
+http://sneer.me/public-key?9A281267BDB5779EFF2691E04BDCDD0CAF167936BCD6C72CBA9D50C977AAD09A&invite=f1f9dbc6a7e248f9b905eb5216ed21f0
+
+** reliable messaging - retry sending tuples
+
 * store tuples (log all received tuples)
-* implement tuple space queries as materialized views
 * add contact from the command line (sneer add-contact <PUK>)
 * implement tuple space queries as materialized views

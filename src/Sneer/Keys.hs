@@ -2,17 +2,23 @@
 
 module Sneer.Keys
        ( ownKeyAndAddress
+       , addressString
        , PrvKey
        , Address (..)
        ) where
 
 import           Control.Applicative
 import           Data.Text
+import           Data.Transit (toBase64)
 import           Filesystem
 import           Filesystem.Path.CurrentOS
 import           Network.Haskoin.Crypto
 import           Prelude hiding (FilePath)
+import           Sneer.Protocol (addressBytes)
 import qualified System.IO.Error as IO
+
+addressString :: Address -> String
+addressString = unpack . toBase64 . addressBytes
 
 ownKeyAndAddress :: IO (PrvKey, Address)
 ownKeyAndAddress = do

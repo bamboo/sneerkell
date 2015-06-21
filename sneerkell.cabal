@@ -51,6 +51,7 @@ executable sneerkell
                   , haskoin
                   , network
                   , sneerkell
+                  , stm >= 2.4.2
 
 test-suite spec
   default-language: Haskell2010
