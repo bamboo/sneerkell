@@ -1,9 +1,10 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Main where
 
 import           Control.Concurrent.STM
 import           Control.Monad (unless)
 import qualified Data.ByteString.Char8 as BC
-import           Data.Maybe (fromJust)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import qualified Data.Text.Encoding as T
@@ -22,23 +23,25 @@ main = withSocketsDo $ do
     mainLoop ownPuk client
 
 mainLoop :: Address -> Client -> IO ()
-mainLoop ownPuk client = do
-  printAddress ownPuk
-  putStrLn ".<ENTER> to quit"
-  loop
- where
-  loop = do
-    line <- getLine
-    unless (line == ".") $ do
-      handleInviteLink ownPuk client line
+mainLoop ownPuk client = start
+  where
+    start = do
+      printAddress ownPuk
+      putStrLn ".<ENTER> to quit"
       loop
+
+    loop = do
+      line <- getLine
+      unless (line == ".") $ do
+        handleInviteLink ownPuk client line
+        loop
 
 printAddress :: Address -> IO ()
 printAddress = TIO.putStrLn . T.toUpper . addressString
 
 handleInviteLink :: Address -> Client -> String -> IO ()
 handleInviteLink ownPuk client link = do
-  let (peerPuk, inviteCode) = parseInviteLink link
+  let Just (peerPuk, inviteCode) = parseInviteLink link
   let tuple = acceptInviteTuple ownPuk peerPuk inviteCode
   atomically $ sendTuple client tuple
 
@@ -52,11 +55,20 @@ acceptInviteTuple ownPuk contactPuk inviteCode = tuple
 
 -- parses links in the form
 -- http://sneer.me/public-key?9A281267BDB5779EFF2691E04BDCDD0CAF167936BCD6C72CBA9D50C977AAD09A&invite=f1f9dbc6a7e248f9b905eb5216ed21f0
-parseInviteLink :: String -> (Address, T.Text)
-parseInviteLink link = (address, inviteCode)
-  where
-    address = addressFromHex . T.encodeUtf8 . fst . head $ query
-    inviteCode = fromJust . snd . last $ query
-    query = URI.parseQueryText queryString
-    queryString = last . BC.split '?' $ uri
-    uri = BC.pack link
+-- and returns the (Address, InviteCode) pair
+parseInviteLink :: String -> Maybe (Address, T.Text)
+parseInviteLink link =
+  let uri = BC.pack link
+      uriParts = BC.split '?' uri
+  in case uriParts of
+    [_, queryString] -> parseInviteLinkQueryString queryString
+    _                -> Nothing
+
+parseInviteLinkQueryString :: BC.ByteString -> Maybe (Address, T.Text)
+parseInviteLinkQueryString queryString =
+  case URI.parseQueryText queryString of
+    [(addressText, Nothing), (unpack -> "invite", Just inviteCode)] -> Just (addressFromText addressText, inviteCode)
+    _                                                               -> Nothing
+
+addressFromText :: T.Text -> Address
+addressFromText = addressFromHex . T.encodeUtf8
