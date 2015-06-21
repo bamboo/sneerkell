@@ -5,7 +5,6 @@ module Data.TransitSpec where
 
 import qualified Data.Aeson as J
 import qualified Data.ByteString as BS
-import qualified Data.Text as T
 import           Data.Transit
 import qualified Data.Vector as V
 import           Data.Word
@@ -71,4 +70,4 @@ keyword :: NonEmpty Char -> Transit
 keyword (NonEmpty cs) = TKeyword $ pack cs
 
 extension :: NonEmpty Char -> Transit -> Transit
-extension (NonEmpty tag) = TExtension (T.pack tag)
+extension (NonEmpty tag) = TExtension $ pack tag
