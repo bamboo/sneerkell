@@ -40,10 +40,13 @@ printAddress :: Address -> IO ()
 printAddress = TIO.putStrLn . T.toUpper . addressString
 
 handleInviteLink :: Address -> Client -> String -> IO ()
-handleInviteLink ownPuk client link = do
-  let Just (peerPuk, inviteCode) = parseInviteLink link
-  let tuple = acceptInviteTuple ownPuk peerPuk inviteCode
-  atomically $ sendTuple client tuple
+handleInviteLink ownPuk client link =
+  case parseInviteLink link of
+    Just (peerPuk, inviteCode) -> do
+      let tuple = acceptInviteTuple ownPuk peerPuk inviteCode
+      atomically $ sendTuple client tuple
+    Nothing                    ->
+      return ()
 
 acceptInviteTuple :: Address -> Address -> T.Text -> Tuple
 acceptInviteTuple ownPuk contactPuk inviteCode = tuple
