@@ -7,15 +7,16 @@ before_install:
 - export PATH=/opt/alex/3.1.3/bin:/opt/happy/1.19.3/bin:/opt/cabal/1.22/bin:$PATH
 - git clone https://github.com/sneerteam/sneer.git --depth 1 --branch master --single-branch sneer
 install:
+- cabal --version
 - cabal update
-- cabal sandbox init
-- cabal install --only-dependencies --enable-tests -j2 --allow-newer
-- sneer/gradlew --build-file sneer/build.gradle -q :server:assemble
 before_script:
 - sneer/gradlew --build-file sneer/build.gradle -q :server:run -Pserver-options="[5555, 8282]" &
 - sleep 5
+script:
+- cabal --version
+- cabal sandbox init
+- cabal install --only-dependencies --enable-tests -j2 --allow-newer
 - cabal check
 - cabal configure --enable-tests
 - cabal build
-script:
 - cabal test --show-details=always --test-options="--color"
