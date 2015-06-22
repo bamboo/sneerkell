@@ -27,19 +27,18 @@ library
   build-depends:    aeson
                   , async
                   , base >= 4 && < 5
-                  , base16-bytestring >= 0.1.1.6
+                  , base16-bytestring
                   , base64-bytestring
                   , bytestring
                   , haskoin
-                  , http-types >= 0.8.6
-                  , mtl
+                  , http-types
                   , network
                   , scientific
-                  , stm >= 2.4.2
+                  , stm
                   , system-fileio
                   , system-filepath
-                  , text
-                  , transformers >= 0.3.0.0
+                  , text >= 1.2.1.1
+                  , transformers
                   , unordered-containers
                   , vector >= 0.10.12.1
 
@@ -50,14 +49,14 @@ executable sneerkell
   hs-source-dirs:   main
   main-is:          Main.hs
   build-depends:    base >= 4 && < 5
-                  , base16-bytestring >= 0.1.1.6
+                  , base16-bytestring
                   , bytestring
                   , haskoin
-                  , http-types >= 0.8.6
+                  , http-types
                   , network
                   , sneerkell
-                  , stm >= 2.4.2
-                  , text
+                  , stm
+                  , text >= 1.2.1.1
                   , vector >= 0.10.12.1
 
 test-suite spec
@@ -75,8 +74,8 @@ test-suite spec
                   , hspec-smallcheck
                   , network
                   , sneerkell
-                  , stm >= 2.4.2
-                  , text
+                  , stm
+                  , text >= 1.2.1.1
                   , unordered-containers
                   , vector >= 0.10.12.1
 
