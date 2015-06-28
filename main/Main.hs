@@ -19,8 +19,7 @@ import           Sneer.Protocol
 main :: IO ()
 main = withSocketsDo $ do
   (_, ownPuk) <- ownKeyAndAddress
-  withClient ownPuk $ \client ->
-    mainLoop ownPuk client
+  withClient ownPuk $ mainLoop ownPuk
 
 mainLoop :: Address -> Client -> IO ()
 mainLoop ownPuk client = start
