@@ -44,9 +44,16 @@ startClient ownPuk = do
   _recvTask   <- async $ recvLoop packetsOut packetsIn _tuplesIn
   return Client{..}
  where
-  serverAddr = SockAddrInet serverPort <$> inet_addr serverHost
-  serverHost = "127.0.0.1"
+  serverAddr = SockAddrInet serverPort <$> hostAddress serverHost
+  serverHost =  "127.0.0.1" -- "dynamic.sneer.me"
   serverPort = 5555
+
+hostAddress :: HostName -> IO HostAddress
+hostAddress host = do
+  SockAddrInet _ address <- (addrAddress . head) <$> getAddrInfo datagramHints (Just host) Nothing
+  return address
+ where
+  datagramHints = Just defaultHints {addrSocketType = Datagram}
 
 withClient :: Address -> (Client -> IO a) -> IO a
 withClient puk = bracket (startClient puk) stopClient

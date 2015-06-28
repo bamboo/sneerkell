@@ -6,6 +6,8 @@
 module Sneer.ProtocolSpec where
 
 import qualified Data.Aeson.Types as J
+import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy.Encoding as T
 import           Data.Transit
 import           Data.TransitSpec
 import qualified Data.Vector as V
@@ -14,6 +16,12 @@ import           Sneer.Protocol
 import           Test.Hspec
 import           Test.Hspec.SmallCheck
 import           Test.SmallCheck.Series
+
+singleQuotesToDouble :: T.Text -> T.Text
+singleQuotesToDouble = T.replace sq dq
+  where
+    sq = T.singleton '\''
+    dq = T.singleton '"'
 
 spec :: Spec
 spec =
@@ -30,6 +38,15 @@ spec =
           packet  = TMap [(TKeyword "ack", number tupleId)
                          ,(TKeyword "for", toTransit peerPuk)]
       in fromTransit packet `shouldBe` Just (Ack peerPuk tupleId)
+
+    it "can decode sub" $
+      let json = singleQuotesToDouble "['^ ','~:send',['^ ','id',48,'type','sub','payload',null,'timestamp',1434920895506,'author',['~#puk','~bmigSZ721d57/JpHgS9zdDK8WeTa81scsup1QyXeq0Jo='],'original_id',48,'audience',['^5','~bAAAAAAAAAAAAAAAA6iQMhBpR9g8O7PsKeBcqYVcBvIk='],'criteria',['^ ','^7',['^5','~bmigSZ721d57/JpHgS9zdDK8WeTa81scsup1QyXeq0Jo='],'^4',['^5','~bAAAAAAAAAAAAAAAA6iQMhBpR9g8O7PsKeBcqYVcBvIk='],'^1','message']]]"
+          author = address 1
+          audience = address 2
+          fields = V.empty
+          tuple = Tuple fields author audience 1
+      in (eitherDecode (T.encodeUtf8 json) >>= eitherUntson) `shouldBe` Right (Accept tuple)
+
 
     it "can decode Send" $
       let json = J.Array

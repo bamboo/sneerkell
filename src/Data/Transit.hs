@@ -16,9 +16,11 @@ module Data.Transit
        , string
        , tson
        , untson
+       , eitherUntson
        , toBase64
        , J.encode
        , J.decode
+       , J.eitherDecode
        , T.pack
        , T.unpack
        ) where
@@ -91,3 +93,6 @@ untson v =
   case J.fromJSON v of
     J.Success t -> fromTransit t
     _           -> Nothing
+
+eitherUntson :: FromTransit a => J.Value -> Either String a
+eitherUntson v = undefined
